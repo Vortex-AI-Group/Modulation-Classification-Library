@@ -44,7 +44,7 @@ class ModulationFineTuningDataset(Dataset):
         return feature, label
 
 
-class BaseFinetuningDataLoader(object):
+class BaseDataLoader(object):
     """Base class for modulation dataset loaders."""
 
     def __init__(self, configs) -> None:
@@ -125,7 +125,7 @@ class BaseFinetuningDataLoader(object):
         return X_normalized
 
 
-class RML2016DataLoader(BaseFinetuningDataLoader):
+class RML2016DataLoader(BaseDataLoader):
     """Data loader for the RML2016.10a dataset."""
 
     def __init__(self, configs) -> None:
@@ -186,6 +186,7 @@ class RML2016DataLoader(BaseFinetuningDataLoader):
         print("mods:", mods)
         print("snrs:", snrs)
 
+        # 创建训练集、验证集和测试集的数据列表
         X_train_list, X_val_list, X_test_list, y_train_list, y_val_list, y_test_list = (
             [],
             [],
@@ -199,12 +200,16 @@ class RML2016DataLoader(BaseFinetuningDataLoader):
             X = data_dict[(mod, self.target_snr)]
             y = np.ones(X.shape[0]) * idx
 
+            # 划分出训练集的比例为60%
             X_train, X_temp, y_train, y_temp = train_test_split(
                 X, y, test_size=0.4, random_state=42
             )
+
+            # 将剩余的40%的数据平均划分为测试集和验证集
             X_val, X_test, y_val, y_test = train_test_split(
                 X_temp, y_temp, test_size=0.5, random_state=42
             )
+
             X_train_list.append(X_train)
             X_val_list.append(X_val)
             X_test_list.append(X_test)
@@ -243,7 +248,7 @@ class RML2016DataLoader(BaseFinetuningDataLoader):
         )
 
 
-class RML2018DataLoader(BaseFinetuningDataLoader):
+class RML2018DataLoader(BaseDataLoader):
     """Data loader for the RML2018.01a dataset."""
 
     def __init__(self, configs) -> None:
