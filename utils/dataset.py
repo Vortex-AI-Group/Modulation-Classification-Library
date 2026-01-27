@@ -80,7 +80,11 @@ class BaseFinetuningDataLoader(object):
         test_dataset: ModulationFineTuningDataset,
         batch_size: Optional[int] = None,
         shuffle: Optional[bool] = None,
-    ) -> Tuple[DataLoader, DataLoader, DataLoader,]:
+    ) -> Tuple[
+        DataLoader,
+        DataLoader,
+        DataLoader,
+    ]:
         """Create data loaders for training, validation, and testing datasets."""
         train_loader = DataLoader(
             train_dataset,
