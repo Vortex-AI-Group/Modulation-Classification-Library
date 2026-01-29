@@ -1,9 +1,16 @@
-import argparse
+from datetime import datetime
+import random
+
+from argparse import ArgumentParser
+from accelerate import Accelerator
+
+import numpy as np
+import torch
 
 from utils.experiment import run_amc_experiment
 
 
-parser = argparse.ArgumentParser(description="PyTorch Auto Modulation Classification")
+parser = ArgumentParser(description="PyTorch Auto Modulation Classification")
 
 parser.add_argument(
     "--model",
@@ -262,3 +269,27 @@ parser.add_argument(
 parser.add_argument(
     "--seed", type=int, default=42, help="Random seed for reproducibility."
 )
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    # Set random seeds for reproducibility
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+
+    accelerator = Accelerator()
+
+    # Get the current time for logging
+    time_now = datetime.now().strftime(r"%Y-%m-%d-%H-%M-%S")
+
+    # Create the experiment setting config
+    setting = f"{args.model}_{args.dataset}_{args.snr}_{args.mode}_sl{args.seq_len}_bs{args.batch_size}_lr{args.learning_rate}_dm{args.d_model}_df{args.d_ff}_pat{args.patience}_sd{args.seed}_{time_now}"
+
+    # Create and run the experiment
+    exp = run_amc_experiment(
+        args=args, setting=setting, accelerator=accelerator, time_now=time_now
+    )
