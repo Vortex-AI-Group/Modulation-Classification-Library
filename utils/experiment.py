@@ -459,7 +459,7 @@ class SupervisedExperiment(BaseExperiment):
 
         return accuracy.item(), predictions, targets, np.mean(time_list)
 
-    def run(self):
+    def run(self) -> None:
         # Create the EarlyStopping object
         early_stopping = EarlyStopping(
             accelerator=self.accelerator,
@@ -527,3 +527,38 @@ class SupervisedExperiment(BaseExperiment):
 
         # logging the results to csv file
         self.logging(time_now=self.time_now, accuracy=accuracy, time_mean=time_mean)
+
+
+class PreTrainingExperiment(BaseExperiment):
+
+    def __init__(
+        self, configs, accelerator: Accelerator, setting: str, time_now: str
+    ) -> None:
+        super().__init__(configs=configs, accelerator=accelerator, setting=setting)
+        self.print_start_message(time_now=time_now)
+        self.time_now = time_now
+
+    def run(self):
+        pass
+
+
+def run_amc_experiment(
+    configs, accelerator: Accelerator, setting: str, time_now: str
+) -> None:
+    """The General experiment interface for the Auto Modulation Classification task."""
+
+    # Determine the different patterns
+    mode = configs.mode
+
+    if mode == "supervised":
+        Exp = SupervisedExperiment
+    elif mode == "unsupervised":
+        Exp = PreTrainingExperiment
+
+    # Create and run the experiment
+    exp = Exp(
+        configs=configs, setting=setting, accelerator=accelerator, time_now=time_now
+    )
+
+    # FIXME: Should we write a dedicated interface to handle time?
+    exp.run()

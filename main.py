@@ -1,5 +1,7 @@
 import argparse
 
+from utils.experiment import run_amc_experiment
+
 
 parser = argparse.ArgumentParser(description="PyTorch Auto Modulation Classification")
 
