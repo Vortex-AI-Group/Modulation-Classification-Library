@@ -537,28 +537,25 @@ class PreTrainingExperiment(BaseExperiment):
         super().__init__(configs=configs, accelerator=accelerator, setting=setting)
         self.print_start_message(time_now=time_now)
         self.time_now = time_now
-
+    
     def run(self):
         pass
-
-
-def run_amc_experiment(
-    configs, accelerator: Accelerator, setting: str, time_now: str
-) -> None:
+    
+    
+def run_amc_experiment(configs, accelerator: Accelerator, setting: str, time_now: str) -> None:
     """The General experiment interface for the Auto Modulation Classification task."""
-
+    
     # Determine the different patterns
     mode = configs.mode
-
+    
     if mode == "supervised":
         Exp = SupervisedExperiment
     elif mode == "unsupervised":
         Exp = PreTrainingExperiment
-
+        
     # Create and run the experiment
-    exp = Exp(
-        configs=configs, setting=setting, accelerator=accelerator, time_now=time_now
-    )
-
-    # FIXME: Should we write a dedicated interface to handle time?
+    exp = Exp(configs=configs, setting=setting, accelerator=accelerator, time_now=time_now)
+    
+    # Start the experiment
     exp.run()
+    
