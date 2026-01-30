@@ -71,6 +71,9 @@ class BaseExperiment(ABC):
         # The root path of the data for model fine-tuning or large scale pre-training
         self.root_path = configs.root_path
 
+        # The number of epochs for early stopping
+        self.patience = configs.patience
+
     @abstractmethod
     def run(self, setting: str) -> None:
         """Run the experiment."""
@@ -400,6 +403,7 @@ class SupervisedExperiment(BaseExperiment):
             for step, (batch_x, batch_y) in enumerate(data_loader, 1):
                 self.optimizer.zero_grad()
                 outputs = self.model(batch_x)
+                num_samples += batch_y.size(0)
 
                 loss = self.criterion(outputs, batch_y)
 
@@ -477,12 +481,14 @@ class SupervisedExperiment(BaseExperiment):
             self.optimizer,
             self.scheduler,
             self.train_loader,
+            self.val_loader,
             self.test_loader,
         ) = self.accelerator.prepare(
             self.model,
             self.optimizer,
             self.scheduler,
             self.train_loader,
+            self.val_loader,
             self.test_loader,
         )
 

@@ -227,7 +227,7 @@ def get_loss_fn(name: str) -> nn.Module:
     name = name.lower()
     if name == "mse":
         return nn.MSELoss()
-    elif name == "cel":
+    elif name == "cross_entropy":
         return nn.CrossEntropyLoss()
     elif name == "mae":
         return nn.L1Loss()
