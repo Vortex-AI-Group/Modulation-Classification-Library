@@ -308,6 +308,7 @@ class SupervisedExperiment(BaseExperiment):
     def dataset_dict(
         self,
     ) -> Dict[str, Union[RML2016aDataLoader, RML2016aDataLoader, RML2018aDataLoader]]:
+        """Return the dictionary of dataset loaders."""
         return {
             "RML2016a": RML2016aDataLoader,
             "RML2016b": RML2016bDataLoader,
@@ -322,6 +323,7 @@ class SupervisedExperiment(BaseExperiment):
         torch.utils.data.DataLoader,
         torch.utils.data.DataLoader,
     ]:
+        """Load the data for training, validation and testing in auto modulation classification."""
 
         assert (
             self.dataset in self.dataset_dict.keys()

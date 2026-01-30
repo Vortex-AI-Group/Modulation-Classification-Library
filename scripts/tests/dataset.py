@@ -4,7 +4,7 @@ from utils.dataset import RML2016aDataLoader, RML2016bDataLoader, RML2018aDataLo
 
 
 class DataSetConfigs(object):
-    """数据集配置类"""
+    """Loading dataset configuration class"""
 
     def __init__(self, dataset: str, file_path: str, root_path: str) -> None:
         self.batch_size = 128
@@ -21,9 +21,11 @@ class DataSetConfigs(object):
 
 
 class TestDataset(unittest.TestCase):
-    """测试加载数据集的各种类方法"""
+    """Test various class methods for loading datasets"""
 
     def test_load_RML2016a(self) -> None:
+        """Test loading RML2016a"""
+
         configs = DataSetConfigs(
             dataset="RML2016a",
             file_path="./dataset/RML2016.10a_dict.pkl",
@@ -31,18 +33,18 @@ class TestDataset(unittest.TestCase):
         )
         train_loader, val_loader, test_loader = RML2016aDataLoader(configs).load()
 
-        # 获取用于正向传播的数据
+        # Obtain data for forward propagation
         for i, (data, label) in enumerate(train_loader):
             break
 
         n_channels = data.shape[1]
         seq_len = data.shape[2]
 
-        # 检验数据的格式是否正确
+        # Check if the data format is correct.
         self.assertEqual(n_channels, 2)
         self.assertEqual(seq_len, 128)
 
-        # 检验数据集分配的比例是否正确
+        # Check if the proportions of the dataset allocation are correct.
         train_num, val_num, test_num = (
             len(train_loader.dataset),
             len(val_loader.dataset),
@@ -54,23 +56,25 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(test_num / num_data, 0.2)
 
     def test_load_RML2016b(self) -> None:
+        """Test loading RML2016b"""
+
         configs = DataSetConfigs(
             dataset="RML2016b", file_path="dataset/RML2016.10b.dat", root_path=None
         )
         train_loader, val_loader, test_loader = RML2016bDataLoader(configs).load()
 
-        # 获取用于正向传播的数据
+        # Obtain data for forward propagation
         for i, (data, label) in enumerate(train_loader):
             break
 
         n_channels = data.shape[1]
         seq_len = data.shape[2]
 
-        # 检验数据的格式是否正确
+        # Check if the data format is correct.
         self.assertEqual(n_channels, 2)
         self.assertEqual(seq_len, 128)
 
-        # 检验数据集分配的比例是否正确
+        # Check if the proportions of the dataset allocation are correct.
         train_num, val_num, test_num = (
             len(train_loader.dataset),
             len(val_loader.dataset),
@@ -82,6 +86,8 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(test_num / num_data, 0.2)
 
     def test_load_RML2018a(self) -> None:
+        """Test loading RML2018a"""
+
         configs = DataSetConfigs(
             dataset="RML2018a",
             file_path="dataset/GOLD_XYZ_OSC.0001_1024.hdf5",
@@ -89,18 +95,18 @@ class TestDataset(unittest.TestCase):
         )
         train_loader, val_loader, test_loader = RML2018aDataLoader(configs).load()
 
-        # 获取用于正向传播的数据
+        # Obtain data for forward propagation
         for i, (data, label) in enumerate(train_loader):
             break
 
         n_channels = data.shape[1]
         seq_len = data.shape[2]
 
-        # 检验数据的格式是否正确
+        # Check if the data format is correct.
         self.assertEqual(n_channels, 2)
         self.assertEqual(seq_len, 1024)
 
-        # 检验数据集分配的比例是否正确
+        # Check if the proportions of the dataset allocation are correct.
         train_num, val_num, test_num = (
             len(train_loader.dataset),
             len(val_loader.dataset),

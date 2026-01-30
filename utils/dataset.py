@@ -197,7 +197,7 @@ class RML2016aDataLoader(BaseDataLoader):
             sorted(list(set([k[j] for k in data_dict.keys()]))) for j in [0, 1]
         ]
 
-        # 创建训练集、验证集和测试集的数据列表
+        # Create data lists for training, validation, and test sets.
         X_train_list, X_val_list, X_test_list, y_train_list, y_val_list, y_test_list = (
             [],
             [],
@@ -211,24 +211,25 @@ class RML2016aDataLoader(BaseDataLoader):
             X = data_dict[(mod, self.target_snr)]
             y = np.ones(X.shape[0]) * idx
 
-            # 划分出训练集的比例为60%
+            # The proportion of data allocated to the training set is 60%.
             X_train, X_temp, y_train, y_temp = train_test_split(
                 X,
                 y,
                 test_size=self.val_test_split_ratio,
             )
 
-            # 对训练数据集进行进一步的划分
+            # Further partition the training dataset.
             if self.configs.split_ratio != 0.6:
                 X_train, _, y_train, _ = train_test_split(
                     X_train, y_train, train_size=self.train_split
                 )
 
-            # 将剩余的40%的数据平均划分为测试集和验证集
+            # The remaining 40% of the data is divided equally into a test set and a validation set.
             X_val, X_test, y_val, y_test = train_test_split(
                 X_temp, y_temp, test_size=0.5
             )
 
+            # Append the data to the lists
             X_train_list.append(X_train)
             X_val_list.append(X_val)
             X_test_list.append(X_test)
@@ -326,7 +327,7 @@ class RML2016bDataLoader(BaseDataLoader):
             sorted(list(set([k[j] for k in data_dict.keys()]))) for j in [0, 1]
         ]
 
-        # 创建训练集、验证集和测试集的数据列表
+        # Create data lists for training, validation, and test sets.
         X_train_list, X_val_list, X_test_list, y_train_list, y_val_list, y_test_list = (
             [],
             [],
@@ -336,28 +337,30 @@ class RML2016bDataLoader(BaseDataLoader):
             [],
         )
 
+        # Loop over modulation types
         for idx, mod in enumerate(mods):
             X = data_dict[(mod, self.target_snr)]
             y = np.ones(X.shape[0]) * idx
 
-            # 划分出训练集的比例为60%
+            # The proportion of data allocated to the training set is 60%.
             X_train, X_temp, y_train, y_temp = train_test_split(
                 X,
                 y,
                 test_size=self.val_test_split_ratio,
             )
 
-            # 对训练数据集进行进一步的划分
+            # Further partition the training dataset.
             if self.configs.split_ratio != 0.6:
                 X_train, _, y_train, _ = train_test_split(
                     X_train, y_train, train_size=self.train_split
                 )
 
-            # 将剩余的40%的数据平均划分为测试集和验证集
+            # The remaining 40% of the data is divided equally into a test set and a validation set.
             X_val, X_test, y_val, y_test = train_test_split(
                 X_temp, y_temp, test_size=0.5
             )
 
+            # Append the data to the respective lists
             X_train_list.append(X_train)
             X_val_list.append(X_val)
             X_test_list.append(X_test)
@@ -365,6 +368,7 @@ class RML2016bDataLoader(BaseDataLoader):
             y_val_list.append(y_val)
             y_test_list.append(y_test)
 
+        # Stack the data from list
         X_train = np.vstack(X_train_list)
         X_val = np.vstack(X_val_list)
         X_test = np.vstack(X_test_list)
@@ -394,14 +398,6 @@ class RML2016bDataLoader(BaseDataLoader):
             batch_size=batch_size,
             shuffle=shuffle,
         )
-
-
-class PreTrainingDataLoader(object):
-    """Data loader for pre-training datasets."""
-
-    def __init__(self, configs) -> None:
-        super().__init__()
-        self.configs = configs
 
 
 class RML2018aDataLoader(BaseDataLoader):
@@ -484,23 +480,24 @@ class RML2018aDataLoader(BaseDataLoader):
         # Get the SNR of the data
         idx_snr = np.where(np.array(data["Z"]).flatten() == self.target_snr)[0]
 
-        # 获取指定的SNR下的数据
+        # Get data under the specified SNR
         X = np.transpose(X[idx_snr], (0, 2, 1))
         y = y[idx_snr]
 
-        # 划分训练集, 验证集和测试集
+        # Divide the dataset into training, validation, and test sets.
         X_train, X_test, y_train, y_test = train_test_split(
             X,
             y,
             test_size=self.val_test_split_ratio,
         )
 
-        # 对训练数据集进行进一步的划分
+        # Further partition the training dataset.
         if self.configs.split_ratio != 0.6:
             X_train, X_val, y_train, y_val = train_test_split(
                 X_train, y_train, train_size=self.train_split
             )
 
+        # Divide the test set and the validation set
         X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5)
 
         # Create the dataset objects and do normalization
@@ -525,3 +522,11 @@ class RML2018aDataLoader(BaseDataLoader):
             batch_size=batch_size,
             shuffle=shuffle,
         )
+
+
+class PreTrainingDataLoader(object):
+    """Data loader for pre-training datasets."""
+
+    def __init__(self, configs) -> None:
+        super().__init__()
+        self.configs = configs
