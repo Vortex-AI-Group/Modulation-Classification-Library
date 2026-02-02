@@ -205,10 +205,10 @@ class BaseExperiment(ABC):
             # Save the model inputs, predictions, targets, MSE, and MAE
             self.accelerator.save(
                 obj={
-                    "train_loss": train_loss,
-                    "train_acc": train_acc,
-                    "val_loss": val_loss,
-                    "val_acc": val_acc,
+                    "train_loss": torch.tensor(train_loss),
+                    "train_acc": torch.tensor(train_acc),
+                    "val_loss": torch.tensor(val_loss),
+                    "val_acc": torch.tensor(val_acc),
                     "predictions": predictions,
                     "targets": targets,
                     "accuracy": torch.tensor(accuracy),
@@ -451,7 +451,6 @@ class SupervisedExperiment(BaseExperiment):
         self.accelerator.load_state(self.checkpoint_path)
 
         # Create the lists to store predictions and targets
-        # FIXME: 这里要进行修改和调整
         predictions = []
         targets = []
         time_list = []
@@ -539,7 +538,7 @@ class SupervisedExperiment(BaseExperiment):
         # Start testing after training
         accuracy, predictions, targets, time_mean = self.test()
 
-        # 计算混淆矩阵
+        # Calculate the confusion matrix
         confusion_matrix = get_confusion_matrix(
             predictions=torch.max(predictions, dim=1)[1],
             targets=targets,
@@ -560,20 +559,25 @@ class SupervisedExperiment(BaseExperiment):
         )
 
         # Plot the experiment results
-        plot_loss_cruve(
-            train_loss=train_loss,
-            val_loss=val_loss,
-            save_path=self.checkpoint_path,
-        )
-        plot_accuracy_curve(
-            train_acc=train_acc,
-            val_acc=val_acc,
-            save_path=self.checkpoint_path,
-        )
-        plot_confusion_matrix(
-            confusion_matrix=confusion_matrix,
-            save_path=self.checkpoint_path,
-        )
+        self.accelerator.print(Fore.RED + "Plotting the experiment results" + Style.RESET_ALL, end=" -> ")
+        
+        if self.accelerator.is_main_process:
+            # 在主进程中进行可视化
+            plot_loss_cruve(
+                train_loss=np.asarray(train_loss),
+                val_loss=val_loss,
+                save_path=self.checkpoint_path,
+            )
+            plot_accuracy_curve(
+                train_acc=np.asarray(train_acc),
+                val_acc=val_acc,
+                save_path=self.checkpoint_path,
+            )
+            plot_confusion_matrix(
+                confusion_matrix=np.asarray(confusion_matrix),
+                save_path=self.checkpoint_path,
+            )
+        self.accelerator.print(Fore.GREEN + "Done!" + Style.RESET_ALL)
 
         # logging the results to csv file
         self.logging(time_now=self.time_now, accuracy=accuracy, time_mean=time_mean)

@@ -484,15 +484,19 @@ def plot_tsne():
     pass
 
 
-def plot_confusion_matrix(confusion_matrix: torch.Tensor, save_path: str) -> None:
+def plot_confusion_matrix(confusion_matrix: Union[np.ndarray, torch.Tensor], save_path: str) -> None:
     """Plot confusion matrix."""
+    
+    # Check if the confusion matrix is a torch Tensor
+    if isinstance(confusion_matrix, torch.Tensor):
+        confusion_matrix = confusion_matrix.numpy()
 
     # Create the figure and axes
     fig, ax = plt.subplots(figsize=(10, 10))
 
     # Plotting the heatmap according to the confusion matrix
     confusion = heatmap(
-        np.random.rand(10, 10) * 100,
+        confusion_matrix,
         square=True,
         annot=True,
         # fmt="d",
