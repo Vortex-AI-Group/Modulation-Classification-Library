@@ -2,12 +2,12 @@ import torch
 from torch import nn
 
 
-class Model(nn.Module):
+class MCformer(nn.Module):
     """`MCformer <https://ieeexplore.ieee.org/abstract/document/9685815>`_ backbone
     The input for MCformer is a 1*2*L frame
     Args:
         frame_length (int): the frame length equal to number of sample points
-        num_classes (int): number of classes for classification.
+        n_classes (int): number of classes for classification.
             The default value is -1, which uses the backbone as
             a feature extractor without the top classifier.
     """
@@ -16,7 +16,7 @@ class Model(nn.Module):
         self,
         configs,
     ) -> None:
-        super(Model, self).__init__()
+        super(MCformer, self).__init__()
 
         # 输入序列的长度 128 1024
         self.seq_len = configs.seq_len
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         dropout = 0.1
 
     print("Building model...")
-    model = Model(configs=Configs())
+    model = MCformer(configs=Configs())
 
     inputs = torch.rand((4, 2, 128))
     print("Input shape:", inputs.shape)

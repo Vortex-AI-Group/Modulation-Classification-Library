@@ -307,26 +307,26 @@ class InceptionTime(nn.Module):
         return out
 
 
-class Model(nn.Module):
+class model(nn.Module):
     """
     A wrapper class for InceptionTime model.
     """
 
-    def __init__(self, config) -> None:
-        super(Model, self).__init__()
+    def __init__(self, configs) -> None:
+        super(model, self).__init__()
         self.inception_time = InceptionTime(
-            seq_len=config.seq_len,
-            in_channels=config.in_channels,
-            n_filters=config.n_filters,
-            kernel_sizes=config.kernel_sizes,
-            bottleneck_channels=config.bottleneck_channels,
-            n_classes=config.n_classes,
-            n_blocks=config.n_blocks,
-            activation=config.activation,
-            bias=config.bias,
-            use_global_avg_pool=config.use_global_avg_pool,
-            max_pool_size=config.max_pool_size,
-            use_residual=config.use_residual,
+            seq_len=configs.seq_len,
+            in_channels=configs.input_channels,
+            n_filters=configs.n_filters,
+            kernel_sizes=configs.kernel_sizes,
+            bottleneck_channels=configs.bottleneck_channels,
+            n_classes=configs.n_classes,
+            n_blocks=configs.n_blocks,
+            activation=configs.activation,
+            bias=configs.bias,
+            use_global_avg_pool=configs.use_global_avg_pool,
+            max_pool_size=configs.max_pool_size,
+            use_residual=configs.use_residual,
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

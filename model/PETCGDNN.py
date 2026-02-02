@@ -33,27 +33,35 @@ class PET(nn.Module):
         return x2
 
 
-class Model(nn.Module):
+class model(nn.Module):
     """`PETCGDNN <https://ieeexplore.ieee.org/abstract/document/9507514>`_ backbone
     The input for PETCGDNN is an N*L*2 frame
     Args:
-        num_classes (int): number of classes for classification.
+        frame_length (int): the frame length equal to number of sample points
+        n_classes (int): number of classes for classification.
             The default value is -1, which uses the backbone as
             a feature extractor without the top classifier.
     """
 
-    def __init__(self, num_classes=26, frame_length=1024, hidden_size=128):
-        super(Model, self).__init__()
-        self.num_classes = num_classes
+    def __init__(
+        self, 
+        configs, 
+    ) ->None:
+        super(model, self).__init__()
+
+        self.n_classes = configs.n_classes
+        self.seq_len = configs.seq_len
+        self.d_model = configs.d_model
+
         self.features = nn.Sequential(
-            PET(frame_length=frame_length),
+            PET(frame_length=self.seq_len),
             nn.Conv2d(1, 75, kernel_size=(2, 8), padding="valid"),
             nn.ReLU(inplace=True),
             nn.Conv2d(75, 25, kernel_size=(1, 5), padding="valid"),
             nn.ReLU(inplace=True),
         )
-        self.gru = nn.GRU(input_size=25, hidden_size=hidden_size, batch_first=True)
-        self.classifier = nn.Linear(hidden_size, num_classes)
+        self.gru = nn.GRU(input_size=25, hidden_size=self.d_model, batch_first=True)
+        self.classifier = nn.Linear(self.d_model, self.n_classes)
 
     def forward(self, x):
         x = torch.transpose(x, 2, 1)
@@ -66,8 +74,8 @@ class Model(nn.Module):
 
 
 if __name__ == "__main__":
-    device = "cuda:1" if torch.cuda.is_available() else "cpu"
-    model = Model(num_classes=26, frame_length=1024).to("cuda:1")
+    device = "GPU" if torch.cuda.is_available() else "cpu"
+    model = model(num_classes=26, frame_length=1024).to(device)
     x = torch.rand((400, 2, 1024)).to(device)
     start = time.time()
     y = model(x)

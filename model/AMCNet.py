@@ -145,23 +145,18 @@ class FeaFusionModule(nn.Module):
         return context
 
 
-class Model(nn.Module):
+class model(nn.Module):
     def __init__(
         self,
-        n_classes=26,
-        sig_len=1024,
-        extend_channel=36,
-        latent_dim=512,
-        num_heads=2,
-        conv_chan_list=None,
+        configs,
     ):
-        super(Model, self).__init__()
-        self.sig_len = sig_len
-        self.extend_channel = extend_channel
-        self.latent_dim = latent_dim
-        self.n_classes = n_classes
-        self.num_heads = num_heads
-        self.conv_chan_list = conv_chan_list
+        super(model, self).__init__()
+        self.sig_len = configs.seq_len
+        self.extend_channel = configs.d_model
+        self.latent_dim = configs.d_ff
+        self.n_classes = configs.n_classes
+        self.num_heads = configs.n_heads
+        self.conv_chan_list = configs.conv_chan_list
 
         if self.conv_chan_list is None:
             self.conv_chan_list = [36, 64, 128, 256]
@@ -198,9 +193,3 @@ class Model(nn.Module):
         x = self.GAP(x)
         y = self.classifier(x.squeeze(2))
         return y
-
-
-if __name__ == "__main__":
-    model = Model(11, 128, 3)
-    x = torch.rand((4, 2, 128))
-    y = model(x)
