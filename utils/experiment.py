@@ -181,6 +181,10 @@ class BaseExperiment(ABC):
 
     def save_results(
         self,
+        train_loss: Union[np.ndarray, torch.Tensor],
+        train_acc: Union[np.ndarray, torch.Tensor],
+        val_loss: Union[np.ndarray, torch.Tensor],
+        val_acc: Union[np.ndarray, torch.Tensor],
         predictions: torch.Tensor,
         targets: torch.Tensor,
         accuracy: Union[float, torch.Tensor, np.ndarray],
@@ -198,6 +202,10 @@ class BaseExperiment(ABC):
             # Save the model inputs, predictions, targets, MSE, and MAE
             self.accelerator.save(
                 obj={
+                    "train_loss": train_loss,
+                    "train_acc": train_acc,
+                    "val_loss": val_loss,
+                    "val_acc": val_acc,
                     "predictions": predictions,
                     "targets": targets,
                     "accuracy": torch.tensor(accuracy),
@@ -497,22 +505,24 @@ class SupervisedExperiment(BaseExperiment):
             self.test_loader,
         )
 
-        train_loss, train_acc, val_loss, val_acc = (
-            torch.zeros(self.num_epochs),
-            torch.zeros(self.num_epochs),
-            torch.zeros(self.num_epochs),
-            torch.zeros(self.num_epochs),
-        )
+        train_loss, train_acc, val_loss, val_acc = [], [], [], []
 
         for epoch in range(self.num_epochs):
             # Training the model
-            train_loss[epoch], train_acc[epoch] = self.train(epoch=epoch + 1)
+            train_loss_epoch, train_acc_epoch = self.train(epoch=epoch + 1)
+            train_loss.append(train_loss_epoch)
+            train_acc.append(train_acc_epoch)
 
             # Validation
-            val_loss[epoch], val_acc[epoch] = self.val(epoch=epoch + 1)
+            val_loss_epoch, val_acc_epoch = self.val(epoch=epoch + 1)
+            val_loss.append(val_loss_epoch)
+            val_acc.append(val_acc_epoch)
 
             # Check the early stopping condition
-            early_stopping(val_loss[epoch], self.model, self.checkpoint_path)
+            early_stopping(
+                accuracy=val_acc_epoch,
+                checkpoint_path=self.checkpoint_path,
+            )
 
             if early_stopping.early_stop:
                 self.accelerator.print(
@@ -535,6 +545,10 @@ class SupervisedExperiment(BaseExperiment):
 
         # save the all results in experiment
         self.save_results(
+            train_loss=train_loss,
+            train_acc=train_acc,
+            val_loss=val_loss,
+            val_acc=val_acc,
             predictions=predictions,
             targets=targets,
             confusion_matrix=confusion_matrix,
