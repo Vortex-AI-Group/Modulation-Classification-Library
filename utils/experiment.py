@@ -32,6 +32,9 @@ from utils.tools import (
     logging_results,
     print_configs,
     get_confusion_matrix,
+    plot_loss_cruve,
+    plot_accuracy_curve,
+    plot_confusion_matrix,
 )
 
 
@@ -554,6 +557,22 @@ class SupervisedExperiment(BaseExperiment):
             confusion_matrix=confusion_matrix,
             time_mean=time_mean,
             accuracy=accuracy,
+        )
+
+        # Plot the experiment results
+        plot_loss_cruve(
+            train_loss=train_loss,
+            val_loss=val_loss,
+            save_path=self.checkpoint_path,
+        )
+        plot_accuracy_curve(
+            train_acc=train_acc,
+            val_acc=val_acc,
+            save_path=self.checkpoint_path,
+        )
+        plot_confusion_matrix(
+            confusion_matrix=confusion_matrix,
+            save_path=self.checkpoint_path,
         )
 
         # logging the results to csv file

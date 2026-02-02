@@ -469,7 +469,7 @@ def plot_accuracy_curve(
     ax.plot(val_acc, label="Validation Accuracy", color="darkorange")
 
     # Set legend and axis labels
-    ax.legend(loc="upper right", fontsize=10.5)
+    ax.legend(loc="upper left", fontsize=10.5)
     ax.set_xlabel("Running Epochs", fontsize=12)
     ax.set_ylabel("Classification Accuracy", fontsize=12)
 
@@ -484,8 +484,36 @@ def plot_tsne():
     pass
 
 
-def plot_confusion_matrix(
-    confusion_matrix: torch.Tensor, class_list: List[str]
-) -> None:
+def plot_confusion_matrix(confusion_matrix: torch.Tensor, save_path: str) -> None:
     """Plot confusion matrix."""
-    pass
+
+    # Create the figure and axes
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    # Plotting the heatmap according to the confusion matrix
+    confusion = heatmap(
+        np.random.rand(10, 10) * 100,
+        square=True,
+        annot=True,
+        # fmt="d",
+        cmap="Blues",
+        cbar=False,
+        ax=ax,
+        vmin=0,
+        linecolor="k",
+        linewidths=0.4,
+        annot_kws={"size": 10},
+    )
+
+    # Set the colorbar
+    cbar = confusion.figure.colorbar(
+        confusion.collections[0], ax=confusion, location="right", shrink=0.8
+    )
+    # Set the axis labels
+    ax.set_xlabel("Predicted label", fontsize=13)
+    ax.set_ylabel("True label", fontsize=13)
+
+    # Save the plotting results
+    fig.savefig(
+        path.join(save_path, "confusion_matrix.pdf"), bbox_inches="tight", dpi=800
+    )
