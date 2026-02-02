@@ -3,15 +3,16 @@ from typing import List, Optional, Tuple, Dict, Union, Any
 import os
 from os import path
 import csv
+from pathlib import Path
 
 from colorama import Fore, Style
 from accelerate import Accelerator
 
-from pathlib import Path
-
 import numpy as np
+from matplotlib import pyplot as plt
 
 from sklearn.metrics import confusion_matrix
+from seaborn import heatmap
 
 import torch
 from torch import nn
@@ -261,12 +262,14 @@ class EarlyStopping(object):
         self.accelerator = accelerator
 
     def __call__(
-        self, test_loss: torch.Tensor, model: nn.Module, checkpoint_path: str
+        self,
+        accuracy: Union[float, torch.Tensor, np.ndarray],
+        checkpoint_path: str,
     ) -> None:
-        score = -test_loss
+        score = accuracy
         if self.best_score is None:
             self.best_score = score
-            self.save_checkpoint(test_loss, model, checkpoint_path)
+            self.save_checkpoint(accuracy, checkpoint_path)
         elif score < self.best_score + self.delta:
             self.counter += 1
             print(f"EarlyStopping counter: {self.counter} out of {self.patience}")
@@ -274,15 +277,15 @@ class EarlyStopping(object):
                 self.early_stop = True
         else:
             self.best_score = score
-            self.save_checkpoint(test_loss, model, checkpoint_path)
+            self.save_checkpoint(accuracy, checkpoint_path)
             self.counter = 0
 
     def save_checkpoint(
-        self, test_loss: torch.Tensor, model: nn.Module, checkpoint_path: str
+        self, accuracy: Union[float, torch.Tensor, np.ndarray], checkpoint_path: str
     ) -> None:
         if self.verbose:
             self.accelerator.print(
-                f"Validation loss decreased ({self.val_loss_min:.6f} --> {test_loss:.6f}).  Saving model ..."
+                f"Validation loss decreased, accuracy: ({self.val_loss_min:.6f} --> {accuracy:.6f}).  Saving model ..."
             )
 
         # Wait for all processes to finish before saving
@@ -291,7 +294,7 @@ class EarlyStopping(object):
         # Only the main process saves the model
         if self.accelerator.is_main_process:
             self.accelerator.save_state(output_dir=checkpoint_path)
-        self.val_loss_min = test_loss
+        self.val_loss_min = accuracy
 
 
 def logging_results(
@@ -421,12 +424,100 @@ def get_confusion_matrix(
     return cm_tensor
 
 
+def plot_loss_cruve(
+    train_loss: Union[torch.Tensor, np.ndarray],
+    val_loss: Union[torch.Tensor, np.ndarray],
+    save_path: str,
+) -> None:
+    """Plot the training and validation loss curves in Auto Modulation Classification."""
+
+    # Create the figure and axes
+    fig, ax = plt.subplots(figsize=(8, 4))
+
+    # Set grid style open
+    ax.grid("--", color="gray", alpha=0.4)
+
+    # Plot the loss curves
+    ax.plot(train_loss, label="Training Loss", color="royalblue")
+    ax.plot(val_loss, label="Validation Loss", color="darkorange")
+
+    # Set legend and axis labels
+    ax.legend(loc="upper right", fontsize=10.5)
+    ax.set_xlabel("Running Epochs", fontsize=12)
+    ax.set_ylabel("Classification Loss", fontsize=12)
+
+    # Save the plot loss figure
+    # fig.savefig(path.join(save_path, "loss_curve.png"), bbox_inches="tight", dpi=600)
+    fig.savefig(path.join(save_path, "loss_curve.pdf"), bbox_inches="tight", dpi=800)
+
+
+def plot_accuracy_curve(
+    train_acc: Union[torch.Tensor, np.ndarray],
+    val_acc: Union[torch.Tensor, np.ndarray],
+    save_path: str,
+) -> None:
+    """Plot the training and validation accuracy curves in Auto Modulation Classification."""
+
+    # Create the figure and axes
+    fig, ax = plt.subplots(figsize=(8, 4))
+
+    # Set grid style open
+    ax.grid("--", color="gray", alpha=0.4)
+
+    # Plot the loss curves
+    ax.plot(train_acc, label="Training Accuracy", color="royalblue")
+    ax.plot(val_acc, label="Validation Accuracy", color="darkorange")
+
+    # Set legend and axis labels
+    ax.legend(loc="upper left", fontsize=10.5)
+    ax.set_xlabel("Running Epochs", fontsize=12)
+    ax.set_ylabel("Classification Accuracy", fontsize=12)
+
+    # Save the plot loss figure
+    # fig.savefig(path.join(save_path, "accuracy_curve.png"), bbox_inches="tight", dpi=600)
+    fig.savefig(
+        path.join(save_path, "accuracy_curve.pdf"), bbox_inches="tight", dpi=800
+    )
+
+
 def plot_tsne():
     pass
 
 
-def plot_confusion_matrix(
-    confusion_matrix: torch.Tensor, class_list: List[str]
-) -> None:
+def plot_confusion_matrix(confusion_matrix: Union[np.ndarray, torch.Tensor], save_path: str) -> None:
     """Plot confusion matrix."""
-    pass
+    
+    # Check if the confusion matrix is a torch Tensor
+    if isinstance(confusion_matrix, torch.Tensor):
+        confusion_matrix = confusion_matrix.numpy()
+
+    # Create the figure and axes
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    # Plotting the heatmap according to the confusion matrix
+    confusion = heatmap(
+        confusion_matrix,
+        square=True,
+        annot=True,
+        # fmt="d",
+        cmap="Blues",
+        cbar=False,
+        ax=ax,
+        vmin=0,
+        linecolor="k",
+        linewidths=0.4,
+        annot_kws={"size": 10},
+    )
+
+    # Set the colorbar
+    cbar = confusion.figure.colorbar(
+        confusion.collections[0], ax=confusion, location="right", shrink=0.8
+    )
+    # Set the axis labels
+    ax.set_xlabel("Predicted label", fontsize=13)
+    ax.set_ylabel("True label", fontsize=13)
+
+    # Save the plotting results
+    fig.savefig(
+        path.join(save_path, "confusion_matrix.pdf"), bbox_inches="tight", dpi=800
+    )

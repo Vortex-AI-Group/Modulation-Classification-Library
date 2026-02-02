@@ -32,6 +32,9 @@ from utils.tools import (
     logging_results,
     print_configs,
     get_confusion_matrix,
+    plot_loss_cruve,
+    plot_accuracy_curve,
+    plot_confusion_matrix,
 )
 
 
@@ -181,6 +184,10 @@ class BaseExperiment(ABC):
 
     def save_results(
         self,
+        train_loss: Union[np.ndarray, torch.Tensor],
+        train_acc: Union[np.ndarray, torch.Tensor],
+        val_loss: Union[np.ndarray, torch.Tensor],
+        val_acc: Union[np.ndarray, torch.Tensor],
         predictions: torch.Tensor,
         targets: torch.Tensor,
         accuracy: Union[float, torch.Tensor, np.ndarray],
@@ -198,6 +205,10 @@ class BaseExperiment(ABC):
             # Save the model inputs, predictions, targets, MSE, and MAE
             self.accelerator.save(
                 obj={
+                    "train_loss": torch.tensor(train_loss),
+                    "train_acc": torch.tensor(train_acc),
+                    "val_loss": torch.tensor(val_loss),
+                    "val_acc": torch.tensor(val_acc),
                     "predictions": predictions,
                     "targets": targets,
                     "accuracy": torch.tensor(accuracy),
@@ -440,7 +451,6 @@ class SupervisedExperiment(BaseExperiment):
         self.accelerator.load_state(self.checkpoint_path)
 
         # Create the lists to store predictions and targets
-        # FIXME: 这里要进行修改和调整
         predictions = []
         targets = []
         time_list = []
@@ -497,22 +507,24 @@ class SupervisedExperiment(BaseExperiment):
             self.test_loader,
         )
 
-        train_loss, train_acc, val_loss, val_acc = (
-            torch.zeros(self.num_epochs),
-            torch.zeros(self.num_epochs),
-            torch.zeros(self.num_epochs),
-            torch.zeros(self.num_epochs),
-        )
+        train_loss, train_acc, val_loss, val_acc = [], [], [], []
 
         for epoch in range(self.num_epochs):
             # Training the model
-            train_loss[epoch], train_acc[epoch] = self.train(epoch=epoch + 1)
+            train_loss_epoch, train_acc_epoch = self.train(epoch=epoch + 1)
+            train_loss.append(train_loss_epoch)
+            train_acc.append(train_acc_epoch)
 
             # Validation
-            val_loss[epoch], val_acc[epoch] = self.val(epoch=epoch + 1)
+            val_loss_epoch, val_acc_epoch = self.val(epoch=epoch + 1)
+            val_loss.append(val_loss_epoch)
+            val_acc.append(val_acc_epoch)
 
             # Check the early stopping condition
-            early_stopping(val_loss[epoch], self.model, self.checkpoint_path)
+            early_stopping(
+                accuracy=val_acc_epoch,
+                checkpoint_path=self.checkpoint_path,
+            )
 
             if early_stopping.early_stop:
                 self.accelerator.print(
@@ -526,7 +538,7 @@ class SupervisedExperiment(BaseExperiment):
         # Start testing after training
         accuracy, predictions, targets, time_mean = self.test()
 
-        # 计算混淆矩阵
+        # Calculate the confusion matrix
         confusion_matrix = get_confusion_matrix(
             predictions=torch.max(predictions, dim=1)[1],
             targets=targets,
@@ -535,12 +547,37 @@ class SupervisedExperiment(BaseExperiment):
 
         # save the all results in experiment
         self.save_results(
+            train_loss=train_loss,
+            train_acc=train_acc,
+            val_loss=val_loss,
+            val_acc=val_acc,
             predictions=predictions,
             targets=targets,
             confusion_matrix=confusion_matrix,
             time_mean=time_mean,
             accuracy=accuracy,
         )
+
+        # Plot the experiment results
+        self.accelerator.print(Fore.RED + "Plotting the experiment results" + Style.RESET_ALL, end=" -> ")
+        
+        if self.accelerator.is_main_process:
+            # 在主进程中进行可视化
+            plot_loss_cruve(
+                train_loss=np.asarray(train_loss),
+                val_loss=val_loss,
+                save_path=self.checkpoint_path,
+            )
+            plot_accuracy_curve(
+                train_acc=np.asarray(train_acc),
+                val_acc=val_acc,
+                save_path=self.checkpoint_path,
+            )
+            plot_confusion_matrix(
+                confusion_matrix=np.asarray(confusion_matrix),
+                save_path=self.checkpoint_path,
+            )
+        self.accelerator.print(Fore.GREEN + "Done!" + Style.RESET_ALL)
 
         # logging the results to csv file
         self.logging(time_now=self.time_now, accuracy=accuracy, time_mean=time_mean)
