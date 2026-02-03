@@ -559,8 +559,10 @@ class SupervisedExperiment(BaseExperiment):
         )
 
         # Plot the experiment results
-        self.accelerator.print(Fore.RED + "Plotting the experiment results" + Style.RESET_ALL, end=" -> ")
-        
+        self.accelerator.print(
+            Fore.RED + "Plotting the experiment results" + Style.RESET_ALL, end=" -> "
+        )
+
         if self.accelerator.is_main_process:
             # 在主进程中进行可视化
             plot_loss_cruve(

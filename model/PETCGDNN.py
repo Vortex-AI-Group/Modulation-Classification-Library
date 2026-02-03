@@ -44,9 +44,9 @@ class model(nn.Module):
     """
 
     def __init__(
-        self, 
-        configs, 
-    ) ->None:
+        self,
+        configs,
+    ) -> None:
         super(model, self).__init__()
 
         self.n_classes = configs.n_classes

@@ -6,12 +6,22 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Tuple, Any
 
 import sys
+
 project_root = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(project_root))
 
 from model import (
-    AMCNet, CDAT, CTNet, DenseCNN, DP_DRSN, 
-    EMC2Net, InceptionTime, MCformer, MCLDNN, MTAMR, PETCGDNN
+    AMCNet,
+    CDAT,
+    CTNet,
+    DenseCNN,
+    DP_DRSN,
+    EMC2Net,
+    InceptionTime,
+    MCformer,
+    MCLDNN,
+    MTAMR,
+    PETCGDNN,
 )
 
 
@@ -20,7 +30,7 @@ class ModelConfig:
     seq_len: int = 128
     n_classes: int = 11
     input_channels: int = 2
-    
+
     d_model: int = 64
     d_ff: int = 256
     n_heads: int = 8
@@ -30,7 +40,7 @@ class ModelConfig:
     # Other
     decimation_factor: int = 8
 
-    # InceptionTime 
+    # InceptionTime
     n_filters: int = 32
     kernel_sizes: List[int] = field(default_factory=lambda: [9, 19, 39])
     bottleneck_channels: int = 32
@@ -42,22 +52,22 @@ class ModelConfig:
     use_residual: bool = True
     batch_size: int = 4
 
-    # AMCNet 
+    # AMCNet
     conv_chan_list: Any = None
 
-    # DenseNet 
+    # DenseNet
     growth_rate: int = 32
     block_config: Tuple = (6, 12, 24, 16)
     bn_size: int = 4
     reduction: float = 0.5
-    
+
 
 class TestModels(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         cls.batch_size = 4
-        # (Batch, Channels, Length)  
+        # (Batch, Channels, Length)
         cls.common_input = torch.rand((cls.batch_size, 2, 128)).to(cls.device)
 
     def _run_test(self, model_instance, input_data, expected_shape):
@@ -79,7 +89,7 @@ class TestModels(unittest.TestCase):
             (InceptionTime.model, {}, "InceptionTime"),
             (MCformer.MCformer, {"d_model": 64, "n_heads": 8}, "MCformer"),
             (MTAMR.model, {"d_model": 64}, "MTAMR"),
-            (PETCGDNN.model, {}, "PETCGDNN")
+            (PETCGDNN.model, {}, "PETCGDNN"),
         ]
 
         for model_fn, overrides, name in test_cases:
@@ -98,8 +108,9 @@ class TestModels(unittest.TestCase):
     def test_MCLDNN(self):
         """MCLDNN"""
         model = MCLDNN.MCLDNN(num_classes=11)
-        x = self.common_input.unsqueeze(1) # (batch, 1, 2, L)
+        x = self.common_input.unsqueeze(1)  # (batch, 1, 2, L)
         self._run_test(model, x, (4, 11))
+
 
 if __name__ == "__main__":
     unittest.main()

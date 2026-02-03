@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 class _DenseLayer(nn.Module):
     """Bottleneck"""
+
     def __init__(
         self, d_model: int, growth_rate: int, bn_size: int, dropout: float
     ) -> None:
@@ -19,8 +20,11 @@ class _DenseLayer(nn.Module):
                     (
                         "conv1",
                         nn.Conv2d(
-                            d_model, bn_size * growth_rate, kernel_size=1,
-                            stride=1, bias=False,
+                            d_model,
+                            bn_size * growth_rate,
+                            kernel_size=1,
+                            stride=1,
+                            bias=False,
                         ),
                     ),
                     ("norm2", nn.BatchNorm2d(bn_size * growth_rate)),
@@ -28,8 +32,12 @@ class _DenseLayer(nn.Module):
                     (
                         "conv2",
                         nn.Conv2d(
-                            bn_size * growth_rate, growth_rate, kernel_size=3,
-                            stride=1, padding=1, bias=False,
+                            bn_size * growth_rate,
+                            growth_rate,
+                            kernel_size=3,
+                            stride=1,
+                            padding=1,
+                            bias=False,
                         ),
                     ),
                 ]
@@ -122,7 +130,11 @@ class model(nn.Module):
                     (
                         "conv0",
                         nn.Conv2d(
-                            3, self.d_model, kernel_size=7, stride=2, padding=3,
+                            3,
+                            self.d_model,
+                            kernel_size=7,
+                            stride=2,
+                            padding=3,
                             bias=False,
                         ),
                     ),
@@ -162,7 +174,7 @@ class model(nn.Module):
         # Classifier
         self.classifier = nn.Linear(num_features, self.n_classes)
 
-        # 初始化权重 
+        # 初始化权重
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight)

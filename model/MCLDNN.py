@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class MCLDNN(nn.Module):
+class Model(nn.Module):
     """`MCLDNN <https://ieeexplore.ieee.org/abstract/document/9106397>`_ backbone
     The input for LSTM is a 1*2*L frame
     Args:
@@ -12,8 +12,8 @@ class MCLDNN(nn.Module):
             a feature extractor without the top classifier.
     """
 
-    def __init__(self, frame_length=128, num_classes=-1, init_cfg=None):
-        super(MCLDNN, self).__init__()
+    def __init__(self, frame_length: int = 128, num_classes: int = -1) -> None:
+        super(Model, self).__init__()
         self.frame_length = frame_length
         self.num_classes = num_classes
         self.conv1 = nn.Sequential(
@@ -62,10 +62,11 @@ class MCLDNN(nn.Module):
                 nn.Linear(128, num_classes),
             )
 
-    def forward(self, x):
-        x1 = self.conv1(x)
-        x2 = self.conv2(x[:, :, 0, :])
-        x3 = self.conv3(x[:, :, 1, :])
+    def forward(self, x_enc: torch.FloatTensor) -> torch.FloatTensor:
+
+        x1 = self.conv1(x_enc)
+        x2 = self.conv2(x_enc[:, :, 0, :])
+        x3 = self.conv3(x_enc[:, :, 1, :])
         x4 = self.conv4(torch.stack([x2, x3], dim=2))
         x5 = self.conv5(torch.cat([x1, x4], dim=1))
         x = torch.reshape(x5, [-1, self.frame_length - 4, 100])

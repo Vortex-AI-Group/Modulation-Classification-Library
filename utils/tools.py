@@ -484,9 +484,11 @@ def plot_tsne():
     pass
 
 
-def plot_confusion_matrix(confusion_matrix: Union[np.ndarray, torch.Tensor], save_path: str) -> None:
+def plot_confusion_matrix(
+    confusion_matrix: Union[np.ndarray, torch.Tensor], save_path: str
+) -> None:
     """Plot confusion matrix."""
-    
+
     # Check if the confusion matrix is a torch Tensor
     if isinstance(confusion_matrix, torch.Tensor):
         confusion_matrix = confusion_matrix.numpy()
