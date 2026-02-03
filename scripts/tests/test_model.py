@@ -107,7 +107,7 @@ class TestModels(unittest.TestCase):
 
     def test_MCLDNN(self):
         """MCLDNN"""
-        model = MCLDNN.MCLDNN(num_classes=11)
+        model = MCLDNN.Model(num_classes=11)
         x = self.common_input.unsqueeze(1)  # (batch, 1, 2, L)
         self._run_test(model, x, (4, 11))
 
